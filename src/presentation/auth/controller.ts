@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { RegisterUserDto } from '../../domain';
+import { CustomError, RegisterUserDto } from '../../domain';
 import { AuthService } from '../services/auth.service';
 
 export class AuthController {
@@ -7,7 +7,13 @@ export class AuthController {
     //DI
     constructor(
         public readonly authService: AuthService,
-    ) {
+    ) {}
+
+    private handleError = (error: unknown, res: Response) => {
+        if (error instanceof CustomError) {
+            return res.status(error.statusCode).json({ error: error.message });
+        }
+        return res.status(500).json({ error: 'Internal server error' });
     }
 
     loginUser = (req: Request, res: Response) => {
@@ -23,6 +29,7 @@ export class AuthController {
 
         this.authService.registerUser(registerDto!)
             .then((user) => res.json(user))
+            .catch((error) => this.handleError(error, res));
 
     }
 

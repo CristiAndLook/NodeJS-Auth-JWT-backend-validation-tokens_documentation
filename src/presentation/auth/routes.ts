@@ -22,6 +22,4 @@ export class AuthRoutes {
 
         return router;
     }
-
-
 }

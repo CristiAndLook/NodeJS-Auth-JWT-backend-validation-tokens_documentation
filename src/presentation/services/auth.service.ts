@@ -1,6 +1,6 @@
 import { bcryptAdapter } from "../../config";
 import { UserModel } from "../../data";
-import { CustomError, RegisterUserDto, UserEntity } from "../../domain";
+import { CustomError, LoginUserDto, RegisterUserDto, UserEntity } from "../../domain";
 
 export class AuthService {
     // DI
@@ -29,5 +29,31 @@ export class AuthService {
         } catch (error) {
             throw CustomError.internalServer(` ${error} `);
         }
+    }
+
+    public async loginUser(loginUserDto: LoginUserDto) {
+        const existUser = await UserModel.findOne({ email: loginUserDto.email });
+        if (!existUser) throw CustomError.badRequest("Email not found");
+
+        try {
+
+            // Verificar la contraseña
+            const isPasswordValid = bcryptAdapter.compare(loginUserDto.password, existUser.password);
+            if (!isPasswordValid) throw CustomError.badRequest("Invalid password");
+
+            const {password, ...userEntity} = UserEntity.fromObject(existUser);
+
+            return {
+                user: userEntity,
+                token: "JWT",
+            };
+
+
+        // JWT <----- para mantener la autenticación del usuario
+
+        } catch (error) {
+            throw CustomError.internalServer(` ${error} `);
+        }
+        
     }
 }

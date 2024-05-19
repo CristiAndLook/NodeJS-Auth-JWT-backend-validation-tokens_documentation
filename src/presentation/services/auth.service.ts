@@ -17,14 +17,16 @@ export class AuthService {
             await user.save();
 
             // JWT <----- para mantener la autenticación del usuario
-
             // Enviar email de confirmación
 
             const { password, ...userEntity } = UserEntity.fromObject(user);
 
+            const token = await JwtAdapter.genererateToken({id: userEntity.id}); 
+            if (!token) throw CustomError.internalServer("Error generating token");
+
             return {
                 user: userEntity,
-                token: "JWT",
+                token: token,
             };
         } catch (error) {
             throw CustomError.internalServer(` ${error} `);
